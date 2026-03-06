@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+data/policies/
+data/uploads/
+.streamlit/
+.env
+node_modules/
+.ipynb_checkpoints/
