@@ -1,68 +1,73 @@
-# 🏛️ AI Policy Navigator for Public Benefits
+# 🏛️ AI Policy Navigator: Public Impact Portal
 
-An AI-powered system to help citizens understand government policies, discover schemes, and determine eligibility using local, private, and free AI technologies.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🌟 Overview
-Government policies are often written in complex legal language and spread across numerous documents, making them inaccessible to the average citizen. **AI Policy Navigator** bridges this gap using Retrieval Augmented Generation (RAG) and Speech-to-Text technologies to create a conversational, multilingual, and social-impact-focused assistant.
+An advanced, AI-powered Retrieval-Augmented Generation (RAG) system designed to demystify complex government policies. Optimized for low-latency, multilingual accessibility, and cinematic user experience.
 
-## 🚀 Features
-1.  **AI Policy Chatbot**: Conversational RAG-based AI that answers questions based on uploaded PDFs.
-2.  **Voice Assistant**: Accessibility for rural users via Speech-to-Text and Text-to-Speech.
-3.  **Scheme Recommendation Engine**: rule-based discovery of benefits based on user profile.
-4.  **Multilingual Support**: Real-time translation (English/Hindi) using `deep-translator`.
-5.  **Policy Simplifier**: Converts complex legal jargon into simple human language.
-6.  **Comparison Engine**: Side-by-side analysis of different government schemes.
-7.  **Fraud & Fake Scheme Detector**: Checks suspicious messages against official policy records.
-8.  **Eligibility Simulator**: Allows users to see how changes in income or age affect their benefits.
-9.  **Analytics Dashboard**: Visualizes search trends and policy load metrics.
+---
 
-## 🛠️ Tech Stack
-- **Frontend**: Streamlit
-- **LLM/Embeddings**: HuggingFace Transformers (Local)
-- **Vector DB**: FAISS
-- **Pipeline**: LangChain
-- **Voice**: SpeechRecognition, pyttsx3
-- **Translation**: deep-translator
-- **Data**: pypdf, plotly
+## 🌌 The Cinematic Experience
 
-## 🏗️ Architecture
-The system uses a **Retrieval Augmented Generation (RAG)** pipeline:
-1.  **PDF Ingestion**: Policies are converted to text and split into chunks.
-2.  **Vectorization**: `sentence-transformers` creates embeddings stored in `FAISS`.
-3.  **Retrieval**: User queries search the vector store for the most relevant context.
-4.  **Generation**: A local LLM (`google/flan-t5-base`) generates a grounded answer.
+This isn't just a chatbot; it's a **Neural Exploration Portal**.
+- **💥 Orbital Collision Splash**: A high-intensity preamble featuring ball-collision dynamics and a "Supernova" reveal.
+- **🔦 Aura-X Neural Spotlight**: A hardware-accelerated, cursor-locked discovery beam that illuminates the dashboard as you navigate.
+- **🏛️ Persistent User Vault**: Robust authentication system with data persistence via local JSON storage.
+- **🛰️ Intelligence & Performance Index**: Real-time analytics driven by direct user feedback (👍/👎).
 
-## 💻 Installation & Setup
-1.  **Clone the directory**:
-    ```bash
-    cd hackforge
-    ```
-2.  **Install dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Install System Dependencies (for voice)**:
-    - macOS: `brew install portaudio`
-    - Linux: `sudo apt-get install python3-pyaudio`
+---
 
-## 🏃 Project Execution
+## 🚀 Quick Start: How to Open the App
+
+Follow these simple steps to launch the Navigator on your local machine:
+
+### 1. Prerequisites
+Ensure you have **Python 3.8 or higher** installed.
+
+### 2. Environment Setup
+Clone the repository and install the high-performance dependencies:
+```bash
+# Navigate to the project directory
+cd hackforge
+
+# Install required packages
+pip install -r requirements.txt
+```
+
+### 3. Launch the Portal
+Execute the main application script using Streamlit:
 ```bash
 streamlit run app.py
 ```
-
-## 📝 Hackathon Demo Workflow
-1.  **Upload Samples**: Upload the provided sample PDFs in the sidebar.
-2.  **Ask AI**: Ask "Who is eligible for PM Kisan scheme?".
-3.  **Check Sources**: Show the document names and confidence scores.
-4.  **Switch Language**: Change the language to Hindi and see the answers translate.
-5.  **Voice Interaction**: Click the microphone and ask about healthcare benefits.
-6.  **Discovery**: Fill the eligibility form to see recommended schemes for a farmer.
-7.  **Fraud Check**: Paste a "free gift" message into the Fraud Detector.
-
-## 🛡️ Trust and Transparency
-- All answers include **Source Citations**.
-- **Confidence Scores** are displayed for every AI response.
-- Runs **100% Locally** (Privacy & Security for sensitive citizen data).
+The app will automatically open in your default browser at **http://localhost:8501**.
 
 ---
-Built with ❤️ for social impact.
+
+## 🔐 Default Access
+For initial testing, use the following administrator credentials:
+- **Username**: `admin`
+- **Password**: `admin123`
+
+*Note: New accounts created via the "Sign Up" portal will be persistently stored in `users.json` across sessions.*
+
+---
+
+## 🛠️ Technology Stack
+- **Engine**: [Streamlit](https://streamlit.io/) (High-Interactive Data UI)
+- **Neural Core**: [LangChain](https://www.langchain.com/) + [HuggingFace](https://huggingface.co/) (RAG Pipeline)
+- **Vector Intelligence**: [FAISS](https://github.com/facebookresearch/faiss) (Lightning-fast Semantic Search)
+- **Analytics**: [Plotly](https://plotly.com/) (Real-time Performance Metrics)
+- **Aesthetics**: Custom Vanilla CSS + Hardware-Accelerated Tracking Scripts
+
+---
+
+## 🏗️ Folder Structure
+- `app.py`: The central neural hub and UI controller.
+- `modules/`: Specialized service layers (RAG, Dashboard, PDF Processing).
+- `data/policies/`: The source of truth for all loaded government documentation.
+- `users.json`: Persistent vault for community and admin registrations.
+
+---
+
+*Developed for the Government Social Impact Hackathon | Built to empower, navigate, and simplify.* 🏛️🦾🔭🏁
