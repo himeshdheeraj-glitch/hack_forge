@@ -40,7 +40,8 @@ Execute the main application script using Streamlit:
 ```bash
 streamlit run app.py
 ```
-The app will automatically open in your default browser at **http://localhost:8501**.
+The app will automatically open in your default browser. You can access it directly here:
+👉 **[http://localhost:8501](http://localhost:8501)**
 
 ---
 
