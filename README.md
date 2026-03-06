@@ -8,6 +8,14 @@ An advanced, AI-powered Retrieval-Augmented Generation (RAG) system designed to 
 
 ---
 
+## 🏛️ Portal Access
+
+To open the web application immediately after launching the server, use the direct link below:
+
+👉 **[Launch AI Policy Navigator Portal](http://localhost:8501)**
+
+---
+
 ## 🌌 The Cinematic Experience
 
 This isn't just a chatbot; it's a **Neural Exploration Portal**.
