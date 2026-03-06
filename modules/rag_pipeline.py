@@ -84,19 +84,27 @@ class RAGPipeline:
         return True
 
     def _setup_qa_chain(self):
-        """Sets up the RetrievalQA chain."""
+        """Sets up the RetrievalQA chain with a more flexible, comprehensive prompt."""
         if not self.vector_store or not self.llm:
             return
 
         template = """
-        Context: {context}
-        Question: {question}
+        Document Context:
+        {context}
         
-        Answer this question in clear, complete sentences based ONLY on the context provided. 
-        Do not use bullet points or lists unless specifically asked.
-        If the context does not contain the answer, say: "The uploaded document does not contain information about this question."
+        User Instruction/Question:
+        {question}
         
-        Answer:"""
+        Role: You are an expert Policy Analyst.
+        Task: Provide a detailed and accurate response based ONLY on the provided document context. 
+        
+        Guidelines:
+        1. If it's a specific question, answer it directly.
+        2. If asked to summarize, list points, or explain, do so clearly.
+        3. If the answer is found in the text, provide it comprehensively.
+        4. If the provided context absolutely does not contain the information, politely state that it's not in the document.
+        
+        Comprehensive Answer:"""
         
         QA_CHAIN_PROMPT = PromptTemplate(
             input_variables=["context", "question"],
@@ -106,60 +114,60 @@ class RAGPipeline:
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
-            retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}), 
+            # Increased k to 6 for broader context awareness
+            retriever=self.vector_store.as_retriever(search_kwargs={"k": 6}), 
             return_source_documents=True,
             chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
         )
 
     def answer_question(self, question):
-        """Answers a question using Neural RAG or Refined Sentence Extraction."""
+        """Answers any type of question using Neural RAG or Deep Semantic Fallback."""
         # 1. Try Neural RAG if ready
         if self.qa_chain and self.model_status == "Ready":
             try:
                 result = self.qa_chain.invoke({"query": question})
                 ans = result["result"].strip()
                 
-                # Validation against hallucinatory fragments
-                if len(ans) < 5 or "information about this question" in ans.lower():
-                    return "The uploaded document does not contain information about this question.", []
+                # Check for "not in document" signals from the model
+                not_found_signals = ["not contain information", "not found in the document", "context does not provide"]
+                is_not_found = any(s in ans.lower() for s in not_found_signals)
                 
-                # Ensure it's a full sentence (basic check)
-                if not ans.endswith('.') and not ans.endswith('?') and not ans.endswith('!'):
-                    ans += "."
-                    
-                return ans, [{"source": d.metadata.get("source", "Doc"), "content": d.page_content} for d in result["source_documents"]]
+                if not is_not_found and len(ans) > 10:
+                    return ans, [{"source": d.metadata.get("source", "Doc"), "content": d.page_content} for d in result["source_documents"]]
             except Exception as e:
                 print(f"RAG Error: {e}")
 
-        # 2. Refined Lite Fallback (Sentence-focused Extraction)
+        # 2. Enhanced Lite Fallback (Broad Semantic Matching)
+        # We look for ANY overlap and return a synthesis of the best parts
         q_words = [w.lower() for w in question.split() if len(w) > 3]
         if not q_words: q_words = [w.lower() for w in question.split()]
         
         scored_chunks = []
         for i, chunk in enumerate(getattr(self, 'chunks', [])):
             chunk_l = chunk.lower()
-            score = sum(1 for word in q_words if word in chunk_l)
+            # Score based on word frequency and proximity
+            score = sum(3 if word in chunk_l else 0 for word in q_words)
             if score > 0:
                 scored_chunks.append((score, i, chunk))
         
         scored_chunks.sort(key=lambda x: x[0], reverse=True)
         
-        if scored_chunks and scored_chunks[0][0] >= 1:
-            best_chunk = scored_chunks[0][2]
-            # Try to find the most relevant sentence within the chunk
-            sentences = [s.strip() for s in best_chunk.split('.') if len(s.strip()) > 10]
-            best_sentence = sentences[0] if sentences else best_chunk
-            
-            for s in sentences:
-                if any(w in s.lower() for w in q_words):
-                    best_sentence = s
-                    break
-            
-            # Formulate as a professional sentence
-            ans = f"According to the document, {best_sentence}."
-            if not ans.endswith('.'): ans += "."
-            
-            sources = [{"source": self.metadatas[scored_chunks[0][1]].get("source", "Policy Doc"), "content": best_chunk}]
-            return ans, sources
+        if scored_chunks:
+            # We take the top 2 most relevant chunks to provide a broader answer
+            best_parts = []
+            sources = []
+            for score, idx, content in scored_chunks[:2]:
+                # Extract relevant sentences
+                sentences = [s.strip() for s in content.split('.') if len(s.strip()) > 15]
+                for s in sentences:
+                    if any(w in s.lower() for w in q_words):
+                        if s not in best_parts: best_parts.append(s)
+                
+                sources.append({"source": self.metadatas[idx].get("source", "Policy Doc"), "content": content})
+
+            if best_parts:
+                ans = "Based on the document highlights: " + " ".join(best_parts)
+                if not ans.endswith('.'): ans += "."
+                return ans, sources
         
-        return "The uploaded document does not contain information about this question.", []
+        return "The provided document does not seem to contain specific information regarding this query.", []

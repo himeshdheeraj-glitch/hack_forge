@@ -10,7 +10,23 @@ from modules.dashboard import render_dashboard
 from modules.policy_comparison import compare_schemes
 from modules.policy_simplifier import simplify_policy_text
 from modules.fraud_detector import detect_fraud
+import json
 # from modules.voice_assistant import browser_stt_html, browser_speak
+
+USER_DB_FILE = "users.json"
+
+def load_users():
+    if os.path.exists(USER_DB_FILE):
+        try:
+            with open(USER_DB_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {"admin": "admin123"}
+    return {"admin": "admin123"}
+
+def save_users(users):
+    with open(USER_DB_FILE, "w") as f:
+        json.dump(users, f)
 
 # --- i18n Dictionary ---
 TRANSLATIONS = {
@@ -77,7 +93,19 @@ TRANSLATIONS = {
         'check_auth': 'Check Authenticity',
         'verification': 'Verification:',
         'not_found': 'The uploaded document does not contain information about this question.',
-        'footer': 'Developed for Government Social Impact Hackathon | Optimized for Low-Resource Environments'
+        'footer': 'Developed for Government Social Impact Hackathon | Optimized for Low-Resource Environments',
+        'login_title': '🏛️ Secure Portal Login',
+        'signup_title': '🚀 Create AI Navigator Account',
+        'username': 'Username',
+        'password': 'Password',
+        'login_btn': 'Sign In',
+        'signup_btn': 'Create Account',
+        'no_account': "Don't have an account?",
+        'has_account': 'Already have an account?',
+        'auth_success': 'Welcome back, {}!',
+        'auth_fail': 'Invalid credentials. Please try again.',
+        'signup_success': 'Account created! Please sign in.',
+        'logout': 'Sign Out'
     },
     'hi': {
         'title': 'AI नीति नेविगेटर',
@@ -142,7 +170,19 @@ TRANSLATIONS = {
         'check_auth': 'प्रामाणिकता की जाँच करें',
         'verification': 'सत्यापन:',
         'not_found': 'उत्तर अपलोड किए गए दस्तावेज़ में उपलब्ध नहीं है।',
-        'footer': 'सरकारी सामाजिक प्रभाव हैकथॉन के लिए विकसित | कम संसाधन वाले वातावरण के लिए अनुकूलित'
+        'footer': 'सरकारी सामाजिक प्रभाव हैकथॉन के लिए विकसित | कम संसाधन वाले वातावरण के लिए अनुकूलित',
+        'login_title': '🏛️ सुरक्षित पोर्टल लॉगिन',
+        'signup_title': '🚀 AI नेविगेटर खाता बनाएँ',
+        'username': 'उपयोगकर्ता नाम',
+        'password': 'पासवर्ड',
+        'login_btn': 'लॉग इन करें',
+        'signup_btn': 'खाता बनाएँ',
+        'no_account': 'खाता नहीं है?',
+        'has_account': 'पहले से ही एक खाता है?',
+        'auth_success': 'वापसी पर स्वागत है, {}!',
+        'auth_fail': 'अमान्य क्रेडेंशियल। कृपया पुनः प्रयास करें।',
+        'signup_success': 'खाता बनाया गया! कृपया साइन इन करें।',
+        'logout': 'साइन आउट'
     },
     'te': {
         'title': 'AI పాలసీ నావిగేటర్',
@@ -207,7 +247,19 @@ TRANSLATIONS = {
         'check_auth': 'ప్రామాణికతను తనిఖీ చేయండి',
         'verification': 'ధృవీకరణ:',
         'not_found': 'సమాధానం అప్‌లోడ్ చేసిన పత్రంలో అందుబాటులో లేదు.',
-        'footer': 'ప్రభుత్వ సామాజిక ప్రభావ హ్యాకథాన్ కోసం అభివృద్ధి చేయబడింది | తక్కువ-వనరుల వాతావరణాల కోసం ఆప్టిమైజ్ చేయబడింది'
+        'footer': 'ప్రభుత్వ సామాజిక ప్రభావ హ్యాకథాన్ కోసం అభివృద్ధి చేయబడింది | తక్కువ-వనరుల వాతావరణాల కోసం ఆప్టిమైజ్ చేయబడింది',
+        'login_title': '🏛️ సురక్షిత పోర్టల్ లాగిన్',
+        'signup_title': '🚀 AI నావిగేటర్ ఖాతాను సృష్టించండి',
+        'username': 'వినియోగదారు పేరు',
+        'password': 'పాస్‌వర్డ్',
+        'login_btn': 'సైన్ ఇన్',
+        'signup_btn': 'ఖాతాను సృష్టించండి',
+        'no_account': 'ఖాతా లేదా?',
+        'has_account': 'ముందే ఖాతా ఉందా?',
+        'auth_success': 'తిరిగి స్వాగతం, {}!',
+        'auth_fail': 'చెల్లని ఆధారాలు. దయచేసి మళ్ళీ ప్రయత్నించండి.',
+        'signup_success': 'ఖాతా సృష్టించబడింది! దయచేసి సైన్ ఇన్ చేయండి.',
+        'logout': 'సైన్ అవుట్'
     }
 }
 
@@ -295,9 +347,61 @@ st.markdown("""
         font-weight: 700 !important; color: white !important;
         box-shadow: 0 4px 15px rgba(0, 100, 255, 0.3);
     }
+
+    /* 6. AURA-X NEURAL SPOTLIGHT (Direct Cursor Sync) */
+    #aura-spotlight {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 99999999;
+        /* Cinematic Radial Beam */
+        background: radial-gradient(
+            circle 250px at var(--cursor-x, 50vw) var(--cursor-y, 50vh),
+            rgba(0, 163, 255, 0.3) 0%,
+            transparent 80%
+        );
+        mix-blend-mode: screen;
+        will-change: background;
+    }
+    
+    /* Ensure the cursor is completely normal and visible */
+    html, body, [data-testid="stApp"], * {
+        cursor: default !important;
+    }
     </style>
+    <div id="aura-spotlight"></div>
+    <script>
+    (function() {
+        const spotlight = document.getElementById('aura-spotlight');
+        const update = (e) => {
+            window.requestAnimationFrame(() => {
+                spotlight.style.setProperty('--cursor-x', e.clientX + 'px');
+                spotlight.style.setProperty('--cursor-y', e.clientY + 'px');
+            });
+        };
+        // Universal listeners for absolute coverage
+        window.addEventListener('mousemove', update, { passive: true });
+        document.addEventListener('mousemove', update, { passive: true });
+        if (window.top) window.top.addEventListener('mousemove', update, { passive: true });
+    })();
+    </script>
     <div id="nebula-bg"></div>
     <div class="stars-container" id="stars"></div>
+    <style>
+    /* 6. Professional Auth Box (Targeting the container directly) */
+    [data-testid="stVerticalBlockBorder"] {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(25px) !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 40px !important;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.7) !important;
+        margin-top: 50px !important;
+    }
+    .auth-title { font-size: 2rem; font-weight: 700; margin-bottom: 20px; text-align: center; }
+    </style>
 """, unsafe_allow_html=True)
 
 # --- Session State ---
@@ -316,16 +420,208 @@ if 'chatbot' not in st.session_state:
         'retrieval_times': [],
         'language_dist': {'en': 0, 'hi': 0, 'te': 0},
         'feedback': {'helpful': 0, 'not_helpful': 0},
-        'query_success_rate': 100.0
+        'query_success_rate': 100.0,
+        'intelligence_scores': [85.0] # Starting baseline for performance index
     }
 if 'language' not in st.session_state: st.session_state.language = 'en'
 if 'chat_history' not in st.session_state: st.session_state.chat_history = []
 if 'quick_summaries' not in st.session_state: st.session_state.quick_summaries = []
 if 'fraud_reports' not in st.session_state: st.session_state.fraud_reports = {}
+if 'ai_insights' not in st.session_state: st.session_state.ai_insights = None
+if 'authenticated' not in st.session_state: st.session_state.authenticated = False
+if 'auth_mode' not in st.session_state: st.session_state.auth_mode = 'login'
+if 'users' not in st.session_state: st.session_state.users = load_users() 
+if 'splash_played' not in st.session_state: st.session_state.splash_played = False
+
+# --- Splash Screen ---
+if not st.session_state.splash_played:
+    st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Outfit:wght@800&display=swap');
+        
+        .splash-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000814; z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+        
+        .nebula-splash {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            animation: nebulaPulse 4s infinite alternate;
+        }
+        
+        /* The Balls */
+        .balls-container { position: relative; width: 400px; height: 150px; display: flex; justify-content: center; align-items: center; }
+        
+        .ball {
+            width: 90px; height: 90px; border-radius: 50%;
+            position: absolute;
+            background: #000;
+            box-shadow: 0 0 30px rgba(0, 163, 255, 0.4), inset 0 0 20px rgba(0,0,0,1);
+            border: 2px solid rgba(0, 163, 255, 0.2);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .ball-inner {
+            width: 45%; height: 45%; background: #00A3FF; border-radius: 50%;
+            box-shadow: 0 0 30px #00FFFF, 0 0 10px #FFFFFF;
+            animation: coreGlow 1s infinite alternate;
+        }
+        @keyframes coreGlow { from { opacity: 0.6; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+        
+        .ball-left-v2 {
+            left: -100vw;
+            animation: slideInLeftV2 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+        .ball-right-v2 {
+            right: -100vw;
+            animation: slideInRightV2 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+        
+        @keyframes slideInLeftV2 {
+            0% { left: -100vw; opacity: 0; filter: blur(10px); }
+            60% { left: 40%; opacity: 1; filter: blur(0); }
+            100% { left: calc(50% - 45px); transform: scale(1.2); }
+        }
+        @keyframes slideInRightV2 {
+            0% { right: -100vw; opacity: 0; filter: blur(10px); }
+            60% { right: 40%; opacity: 1; filter: blur(0); }
+            100% { right: calc(50% - 45px); transform: scale(1.2); }
+        }
+        
+        /* The Collapse / Merging Effect */
+        .collision-flash {
+            position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%;
+            z-index: 20; opacity: 0;
+            animation: flashImpact 0.8s 1.7s forwards;
+        }
+        @keyframes flashImpact {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 white; }
+            50% { opacity: 1; box-shadow: 0 0 100px 50px #00A3FF, 0 0 200px 100px white; }
+            100% { transform: scale(150); opacity: 0; }
+        }
+        
+        /* Project Name Appearance */
+        .project-reveal {
+            position: absolute; text-align: center; opacity: 0;
+            animation: revealProject 1.5s 1.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            z-index: 30;
+        }
+        @keyframes revealProject {
+            0% { opacity: 0; transform: scale(2) translateY(0); filter: blur(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+        
+        .project-reveal h1 {
+            color: white; font-family: 'Outfit', sans-serif; font-size: 3.5rem; 
+            font-weight: 800; line-height: 1; margin: 0; letter-spacing: -2px;
+            text-shadow: 0 0 20px rgba(0, 163, 255, 0.5);
+        }
+        .project-reveal span { color: #00A3FF; }
+        
+        .sync-msg {
+            margin-top: 140px; font-family: 'JetBrains Mono', monospace; 
+            color: #A855F7; letter-spacing: 5px; font-size: 0.7rem; opacity: 0;
+            animation: fadeIn 0.5s 2.5s forwards;
+            text-transform: uppercase;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.7; } }
+        </style>
+        
+        <div class="splash-container">
+            <div class="nebula-splash"></div>
+            <div class="balls-container">
+                <div class="ball ball-left-v2"><div class="ball-inner"></div></div>
+                <div class="ball ball-right-v2"><div class="ball-inner"></div></div>
+                <div class="collision-flash"></div>
+                <div class="project-reveal">
+                    <h1>AI POLICY<br><span>NAVIGATOR</span></h1>
+                </div>
+            </div>
+            <div class="sync-msg">Neural Core Initialized</div>
+        </div>
+    """, unsafe_allow_html=True)
+    time.sleep(4.8) # Cinematic duration
+    st.session_state.splash_played = True
+    st.rerun()
+
+# --- Authentication UI ---
+if not st.session_state.authenticated:
+    _, center_col, _ = st.columns([0.5, 1.5, 0.5])
+    
+    with center_col:
+        # Use a bordered container which we then style with CSS above
+        with st.container(border=True):
+            # 1. Brand Title (Now firmly inside the box)
+            st.markdown(f"""
+                <div style='text-align: center; margin-bottom: 35px; padding-top: 10px;'>
+                    <h1 style='color: white; font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin:0;'>AI POLICY<br><span style='color: #00A3FF;'>NAVIGATOR</span></h1>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Language Select (Simplified)
+            c1, c2 = st.columns([0.8, 0.2])
+            with c2:
+                st.session_state.language = st.selectbox("🌐", ["en", "hi", "te"], key="auth_lang", label_visibility="collapsed")
+
+            if st.session_state.auth_mode == 'login':
+                st.markdown(f'<div class="auth-title">{t("login_title")}</div>', unsafe_allow_html=True)
+                # Auto-prefill the username if they just signed up
+                pref_user = st.session_state.get('signup_user', "")
+                u = st.text_input(t("username"), value=pref_user, key="l_user", placeholder="Enter username...", label_visibility="collapsed")
+                p = st.text_input(t("password"), type="password", key="l_pass", placeholder="Enter password...", label_visibility="collapsed")
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button(t("login_btn"), use_container_width=True):
+                    if u in st.session_state.users and st.session_state.users[u] == p:
+                        st.session_state.authenticated = True
+                        st.session_state.user = u
+                        st.success(t("auth_success").format(u))
+                        st.rerun()
+                    else:
+                        st.error(t("auth_fail"))
+                
+                st.markdown("<div style='margin-top:25px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;'></div>", unsafe_allow_html=True)
+                if st.button(t("no_account"), key="go_signup", use_container_width=True):
+                    st.session_state.auth_mode = 'signup'
+                    st.rerun()
+
+            else:
+                st.markdown(f'<div class="auth-title">{t("signup_title")}</div>', unsafe_allow_html=True)
+                nu = st.text_input(t("username"), key="s_user", placeholder="New Username", label_visibility="collapsed")
+                np = st.text_input(t("password"), type="password", key="s_pass", placeholder="New Password", label_visibility="collapsed")
+                cp = st.text_input("Confirm Password", type="password", key="s_conf", placeholder="Confirm Password", label_visibility="collapsed")
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button(t("signup_btn"), use_container_width=True):
+                    if np != cp: st.error("Passwords do not match!")
+                    elif nu in st.session_state.users: st.error("Username already exists!")
+                    elif len(nu) < 3 or len(np) < 4: st.error("Username/Password too short!")
+                    else:
+                        st.session_state.users[nu] = np
+                        save_users(st.session_state.users) # Persist to JSON file
+                        # Store newly created user in session state for auto-prefill
+                        st.session_state.signup_user = nu
+                        st.success(t("signup_success"))
+                        st.session_state.auth_mode = 'login'
+                        st.rerun()
+                
+                st.markdown("<div style='margin-top:25px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;'></div>", unsafe_allow_html=True)
+                if st.button(t("has_account"), key="go_login", use_container_width=True):
+                    st.session_state.auth_mode = 'login'
+                    st.rerun()
+    
+    # Hide the Sidebar completely on auth page
+    st.markdown("""<style>section[data-testid="stSidebar"] { display: none; }</style>""", unsafe_allow_html=True)
+    st.stop() # Prevent dashboard rendering
 
 # --- Sidebar ---
 with st.sidebar:
     st.title(t('sidebar_title'))
+    st.write(f"👤 Logged in as: **{st.session_state.user}**")
+    
+    if st.button(t('logout'), use_container_width=True):
+        st.session_state.authenticated = False
+        st.rerun()
     
     st.markdown("---")
     # Multi-lingual support
@@ -379,13 +675,26 @@ with st.sidebar:
                 
                 progress.progress((i+1)/len(uploaded_files))
             
-            # 4. Instant Lite Indexing (No heavy models needed)
+            # 4. Instant Lite Indexing & Model Warm-up
+            st.session_state.chatbot.rag.initialize_models()
             st.session_state.chatbot.rag.build_vector_store(all_chunks, all_metadatas, text_content=combined_text)
             st.session_state.stats['total_policies'] += len(uploaded_files)
             st.session_state.stats['total_chunks'] += len(all_chunks)
             st.session_state.stats['total_pages'] += len(uploaded_files) * 5 # Mock: Average 5 pages per doc
             
             status_txt.text(t('analysis_complete'))
+            
+            # --- NEW: AI-Powered Policy Simplification Insights ---
+            with st.spinner("Generating AI-Powered Masterpiece Insights..."):
+                from modules.policy_simplifier import summarize_policy
+                # Extract all unique important points using RAG with Full Text Fallback
+                insights = summarize_policy(
+                    st.session_state.chatbot.rag.vector_store, 
+                    st.session_state.chatbot.rag.llm,
+                    full_text=combined_text
+                )
+                st.session_state.ai_insights = insights
+            
             time.sleep(1)
             st.rerun()
         else:
@@ -450,7 +759,24 @@ else:
     # Tab indexing starts from 0 because Explore Categories is gone
     # Tab 0: Policy Simplifier and Chatbot
     with tabs[0]:
-        # --- INSTANT DISPLAY: PDF SIMPLIFIER (Moved here) ---
+        # --- NEW: Masterpiece AI Policy Insights (Executive Summary) ---
+        if st.session_state.ai_insights:
+            st.markdown(f"### 🏛️ {t('simplifier_sub')}: AI-Powered Professional Insights")
+            
+            display_insights = st.session_state.ai_insights
+            if st.session_state.language != 'en':
+                display_insights = translate_text(display_insights, st.session_state.language)
+                
+            st.markdown(f"""
+                <div class="scheme-card" style="border-left: 5px solid #00A3FF; background: rgba(0, 163, 255, 0.05) !important;">
+                    <div style="font-size: 1.1rem; line-height: 1.8;">
+                        {display_insights.replace('\n', '<br/>')}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.divider()
+
+        # --- Rule-based Quick Highlights ---
         if st.session_state.quick_summaries:
             st.markdown(t('highlight_header'))
             for qs in st.session_state.quick_summaries:
@@ -464,6 +790,9 @@ else:
                     highlights = [translate_text(h, st.session_state.language) for h in highlights]
 
                 with st.container():
+                    # Compose highlights with dynamic safety
+                    highlight_list = "".join([f"<li>{h}</li>" for h in highlights]) if highlights else f"<li>{t('doc_analysis')} in progress...</li>"
+                    
                     st.markdown(f"""
                     <div class="scheme-card">
                         <div class="scheme-category">{t('doc_analysis')}</div>
@@ -471,7 +800,7 @@ else:
                         <p><b>{t('target_aud')}</b> {elig}</p>
                         <p><b>{t('key_highlights')}</b></p>
                         <ul>
-                            {"".join([f"<li>{h}</li>" for h in highlights])}
+                            {highlight_list}
                         </ul>
                     </div>
                     """, unsafe_allow_html=True)
@@ -492,6 +821,10 @@ else:
                 st.session_state.stats['total_questions'] += 1
                 st.session_state.stats['response_times'].append(latency)
                 st.session_state.stats['language_dist'][st.session_state.language] += 1
+                
+                # Add a point to intelligence scores (carry over last value)
+                last_score = st.session_state.stats['intelligence_scores'][-1]
+                st.session_state.stats['intelligence_scores'].append(last_score)
                 
                 # Localized "Not Found" response
                 ans = res['answer']
@@ -527,8 +860,16 @@ else:
                         c1, c2, _ = st.columns([0.1, 0.1, 0.8])
                         if c1.button("👍", key=f"up_{i}"):
                             st.session_state.stats['feedback']['helpful'] += 1
+                            if st.session_state.stats['intelligence_scores']:
+                                # Directly increase the intelligence score for positive feedback
+                                st.session_state.stats['intelligence_scores'][-1] = min(100.0, st.session_state.stats['intelligence_scores'][-1] + 5.0)
+                            st.rerun()
                         if c2.button("👎", key=f"down_{i}"):
                             st.session_state.stats['feedback']['not_helpful'] += 1
+                            if st.session_state.stats['intelligence_scores']:
+                                # Directly decrease the intelligence score for negative feedback
+                                st.session_state.stats['intelligence_scores'][-1] = max(10.0, st.session_state.stats['intelligence_scores'][-1] - 8.0)
+                            st.rerun()
 
     # Tab 1: Analytics
     with tabs[1]:

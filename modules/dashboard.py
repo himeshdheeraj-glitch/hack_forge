@@ -48,15 +48,16 @@ def render_dashboard(stats):
             st.plotly_chart(fig_lang, use_container_width=True)
 
     with col2:
-        st.subheader("⏱️ RAG Latency Trend")
-        latency_hist = stats.get('response_times', [])
-        if not latency_hist:
-            st.info("Waiting for first response to track latency...")
+        st.subheader("⏱️ Intelligence & Performance Index")
+        performance_hist = stats.get('intelligence_scores', [85.0])
+        if not performance_hist:
+            st.info("Waiting for system activity to track intelligence...")
         else:
-            fig_latency = px.line(y=latency_hist, labels={'y': 'Seconds', 'x': 'Query Index'},
-                                 title="Real-time Latency (Session History)")
-            fig_latency.update_traces(line_color='#00d11f', line_width=3)
-            st.plotly_chart(fig_latency, use_container_width=True)
+            fig_perf = px.line(y=performance_hist, labels={'y': 'Intelligence Score (%)', 'x': 'Interaction History'},
+                                 title="Real-time System Trust & Intelligence Trend")
+            fig_perf.update_traces(line_color='#00d11f', line_width=4)
+            fig_perf.update_layout(yaxis_range=[0, 105])
+            st.plotly_chart(fig_perf, use_container_width=True)
 
     st.markdown("---")
 

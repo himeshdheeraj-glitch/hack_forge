@@ -69,6 +69,10 @@ def get_quick_summary(text):
         "category": "Social Welfare"
     }
     
+    # Keywords for discovery
+    highlight_keywords = ["benefit", "provide", "assistance", "subsidy", "financial", "grant", "allowance", "support", "covered", "incentive"]
+    elig_keywords = ["eligible", "eligibility", "qualification", "criteria", "limit", "age", "income"]
+    
     # 1. Title & Category Detection
     for line in lines[:20]:
         line_l = line.lower()
@@ -83,60 +87,83 @@ def get_quick_summary(text):
             elif any(word in line_l for word in ["education", "student", "school", "scholarship"]): summary["category"] = "Education"
             break
             
-    # 2. Deep Extraction Loop
+    # --- NEW: Check if document is short enough to show EVERYTHING line-by-line ---
+    # First, collect all substantial non-empty lines
+    all_substantial_lines = []
     for line in lines:
-        l = line.lower().strip()
-        if not l or len(l) < 5: continue
+        line_s = line.strip()
+        if len(line_s) > 10 and "http" not in line_s.lower():
+            if line_s not in all_substantial_lines:
+                all_substantial_lines.append(line_s)
+    
+    # If the total number of points in the document is small (<= 25), show ALL of them
+    if 0 < len(all_substantial_lines) <= 25:
+        summary["highlights"] = all_substantial_lines
+        # Also try to pick a title from the first line
+        if summary["title"] == "Unknown Government Scheme" and all_substantial_lines:
+            summary["title"] = all_substantial_lines[0][:100]
+    else:
+        # 2. Deep Extraction Loop for larger files
+        seen_lines = set()
+        for line in lines:
+            l = line.lower().strip()
+            if not l or len(l) < 5: continue
+            if l in seen_lines: continue
+            seen_lines.add(l)
 
-        # Highlights
-        if any(w in l for w in ["benefit", "provide", "assistance", "subsidy"]) and len(summary["highlights"]) < 4:
-            if len(line) > 20 and line.strip() not in summary["highlights"]:
-                summary["highlights"].append(line.strip())
+            # Highlights - Capture up to 20 important points
+            if any(w in l for w in highlight_keywords) and len(summary["highlights"]) < 20:
+                if len(line.strip()) > 20:
+                    summary["highlights"].append(line.strip())
 
-        # Eligibility
-        if any(w in l for w in ["eligible", "eligibility", "qualification", "criteria"]):
-            if len(line.strip()) > 10:
-                summary["eligibility"] = line.strip()
+            # Eligibility
+            if any(w in l for w in elig_keywords):
+                if len(line.strip()) > 15 and summary["eligibility"] == "Refer to document for eligibility details.":
+                    summary["eligibility"] = line.strip()
 
-        # Required Documents
-        doc_keywords = ["aadhaar", "pan card", "income certificate", "ration card", "voter id", "passport", "certificate", "proof"]
-        if any(w in l for w in doc_keywords) and len(summary["required_documents"]) < 6:
-            # Clean up line if it's a list item
-            cleaned = line.strip().lstrip('•-*1234567890. ')
-            if 5 < len(cleaned) < 100:
-                if cleaned not in summary["required_documents"]:
+            # Required Documents
+            doc_keywords = ["aadhaar", "pan card", "income certificate", "ration card", "voter id", "passport", "certificate", "proof", "photograph"]
+            if any(w in l for w in doc_keywords) and len(summary["required_documents"]) < 10:
+                cleaned = line.strip().lstrip('•-*1234567890. ')
+                if 5 < len(cleaned) < 120 and cleaned not in summary["required_documents"]:
                     summary["required_documents"].append(cleaned)
 
-        # Application Methods
-        if "online" in l or "portal" in l or "website" in l:
-            if "Online Application" not in summary["methods"]: summary["methods"].append("Online Application")
-        if "offline" in l or "office" in l or "center" in l or "csc" in l:
-            if "Offline / Government Center" not in summary["methods"]: summary["methods"].append("Offline / Government Center")
+            # Application Methods
+            if "online" in l or "portal" in l or "website" in l:
+                if "Online Application" not in summary["methods"]: summary["methods"].append("Online Application")
+            if "offline" in l or "office" in l or "center" in l or "csc" in l:
+                if "Offline / Government Center" not in summary["methods"]: summary["methods"].append("Offline / Government Center")
 
-        # Application Steps
-        step_keywords = ["step", "procedure", "how to apply", "registration", "visit"]
-        if any(w in l for w in step_keywords) and len(summary["how_to_apply"]) < 6:
-            cleaned_step = line.strip().lstrip('•-*1234567890. ')
-            if 15 < len(cleaned_step) < 200:
-                if cleaned_step not in summary["how_to_apply"]:
+            # Application Steps
+            step_keywords = ["step", "procedure", "how to apply", "registration", "visit", "apply"]
+            if any(w in l for w in step_keywords) and len(summary["how_to_apply"]) < 8:
+                cleaned_step = line.strip().lstrip('•-*1234567890. ')
+                if 15 < len(cleaned_step) < 250 and cleaned_step not in summary["how_to_apply"]:
                     summary["how_to_apply"].append(cleaned_step)
 
-        # Tracking
-        if any(w in l for w in ["track", "status", "application id", "reference number"]) and summary["tracking"] == "Not specified in document.":
-            summary["tracking"] = line.strip()
+            # Tracking
+            if any(w in l for w in ["track", "status", "application id", "reference number"]) and (summary["tracking"] == "Not specified in document." or len(summary["tracking"]) < 10):
+                summary["tracking"] = line.strip()
 
-        # Link Extraction
-        if "http" in l or "https" in l or ".gov.in" in l:
-            import re
-            links = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', line)
-            if links:
-                # Prioritize .gov.in links
-                gov_links = [link for link in links if ".gov.in" in link]
-                summary["link"] = gov_links[0] if gov_links else links[0]
+            # Link Extraction
+            if "http" in l or "https" in l or ".gov.in" in l:
+                import re
+                links = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', line)
+                if links:
+                    gov_links = [link for link in links if ".gov.in" in link]
+                    summary["link"] = gov_links[0] if gov_links else links[0]
 
-    # Fallback for steps if none found
+    # --- Robust Fallback for empty highlights/eligibility in large files ---
+    if not summary["highlights"] and len(all_substantial_lines) > 0:
+        summary["highlights"] = all_substantial_lines[:20]
+
+    if summary["eligibility"] == "Refer to document for eligibility details." and len(lines) > 5:
+        candidates = [l.strip() for l in lines[:30] if 20 < len(l.strip()) < 150]
+        if candidates:
+            summary["eligibility"] = candidates[0]
+
     if not summary["how_to_apply"]:
-        summary["how_to_apply"] = ["Refer to the official portal for detailed steps.", "Contact the nearest administrative office."]
+        summary["how_to_apply"] = ["Refer to the official portal for detailed steps.", "Consult the nearest government administrative office."]
 
     return summary
 
